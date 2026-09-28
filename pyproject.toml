@@ -1,0 +1,27 @@
+[project]
+name = "wage-catalog-service"
+version = "2.0.0"
+description = "Payslip Master Data -> Wage Type Catalog conversion API"
+requires-python = ">=3.12"
+# Runtime pins live in requirements.txt (the deployable lock); dev tools in requirements-dev.txt.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q -p no:cacheprovider"
+filterwarnings = ["error::DeprecationWarning:app.*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF", "ASYNC"]
+ignore = [
+    "RUF001", "RUF002", "RUF003",  # typographic characters in strings/comments are intentional
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "S108"]  # asserts and literal test passwords are fine in tests
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "tests"]

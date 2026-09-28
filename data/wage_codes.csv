@@ -1,0 +1,21 @@
+molga,wage_type,wage_code
+*,Regular Salary,1000
+*,Holiday Pay,1100
+*,Vacation Pay,1110
+*,Domestic Partner Imputed Income,1500
+*,Group Term Life Imputed,1510
+*,Federal Income Tax,4010
+*,Social Security EE,4030
+*,Medicare EE,4050
+*,OR State Income Tax,4110
+*,OR Paid Leave EE,4120
+*,OR Statewide Transit Tax,4130
+*,401(k) Pre-Tax,5000
+*,Medical Pre-Tax,5100
+*,Dental Pre-Tax,5110
+*,Vision Pre-Tax,5120
+*,Domestic Partner Medical,6100
+*,Domestic Partner Dental,6110
+*,Domestic Partner Vision,6120
+*,401(k) Employer Match,7000
+*,Medical Employer Contribution,7100
