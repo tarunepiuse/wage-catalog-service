@@ -86,9 +86,9 @@ UPLOAD_OPENAPI = {
             "type": "object",
             "required": ["file"],
             "properties": {
-                "file": {"type": "string", "format": "binary",
+                "file": {"type": "string", "contentMediaType": "application/octet-stream",
                          "description": "Payslip Master Data .xlsx, or the Pay Line Items .csv"},
-                "master_data": {"type": "string", "format": "binary",
+                "master_data": {"type": "string", "contentMediaType": "application/octet-stream",
                                 "description": "Master Data .csv (CSV mode only; omit if `file` is pre-joined)"},
             },
         }}},
@@ -242,6 +242,9 @@ def get_job(job_id: str, request: Request, principal: CurrentPrincipal) -> Job:
 
 @router.get(
     "/jobs/{job_id}/download", name="download_job", response_class=OneTimeFileResponse,
+    # Explicit: FastAPI otherwise infers it from the response class's __init__, which has no status_code
+    # parameter, and OpenAPI generation (and with it /docs) fails.
+    status_code=status.HTTP_200_OK,
     summary="Download the catalog — one time only; the uploaded and generated files are then deleted",
     description="If the transfer is interrupted the job is kept, so the download can be retried until it expires. "
                 "Range requests are not supported.",
