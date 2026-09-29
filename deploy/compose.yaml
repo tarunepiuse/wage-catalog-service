@@ -1,0 +1,58 @@
+# Production stack for a single host that may be shared with other apps (e.g. manon-prod).
+#
+#   api    the FastAPI service; no host port — reachable only through Caddy on the private network
+#   caddy  HTTPS on 443 with an automatic Let's Encrypt certificate
+#
+# Port 80 is deliberately not used: on manon-prod it belongs to manon's nginx. Caddy obtains its
+# certificate with the TLS-ALPN challenge on 443 instead (see Caddyfile).
+#
+# Configuration comes from deploy/.env (created by deploy.sh, never committed).
+
+name: wage-catalog
+
+services:
+  api:
+    build:
+      context: ..
+    image: wage-catalog-service:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Trust X-Forwarded-For only from inside this network: the container publishes no host port,
+      # so Caddy is the only thing that can reach it.
+      FORWARDED_ALLOW_IPS: "*"
+    volumes:
+      - db:/srv/var/db        # users + API keys — must survive redeploys
+      - jobs:/srv/var/jobs    # transient uploads/outputs, cleaned by the service itself
+    expose:
+      - "8000"
+    mem_limit: 512m
+    cpus: 1.0
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS in deploy/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data      # certificates — keep, or Let's Encrypt rate limits bite on redeploys
+      - caddy_config:/config
+    mem_limit: 128m
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+volumes:
+  db:
+  jobs:
+  caddy_data:
+  caddy_config:

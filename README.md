@@ -169,6 +169,29 @@ with `Retry-After` · 500,000 rows per sheet · first 25 row errors reported.
 
 ## Running in production
 
+### AWS EC2 (manon-prod) — `deploy/`
+
+Runs as its own Compose project (`wage-catalog`) next to manon, without touching it. The API has no host port. Caddy serves
+HTTPS on **443** with an automatic Let's Encrypt certificate, validated over TLS-ALPN because port 80 belongs to manon's nginx.
+Memory is capped at 512 MB for the API and 128 MB for Caddy.
+
+```bash
+# first time, on the server
+sudo mkdir -p /opt/wage-catalog && sudo chown ec2-user: /opt/wage-catalog
+git clone https://github.com/tarunepiuse/wage-catalog-service.git /opt/wage-catalog
+SITE_ADDRESS=13-62-135-9.sslip.io /opt/wage-catalog/deploy/deploy.sh    # creates deploy/.env with a fresh secret
+cd /opt/wage-catalog/deploy && docker compose exec api python -m scripts.manage_users create admin --role admin
+
+# every update
+/opt/wage-catalog/deploy/deploy.sh
+```
+
+`deploy/.env` exists only on the server and holds the JWT secret. Users live in the `wage-catalog_db` volume, so they survive
+redeploys. Logs: `docker compose -f /opt/wage-catalog/deploy/compose.yaml logs -f api`. `13-62-135-9.sslip.io` is a test hostname
+that resolves to the server IP. For a real domain, point an A record at the server and change `SITE_ADDRESS` in `deploy/.env`.
+
+### Any Docker host
+
 ```bash
 docker build -t wage-catalog-service:2.0.0 .
 docker run -d -p 8000:8000 -e WTC_JWT_SECRET=… -v wtc-db:/srv/var/db wage-catalog-service:2.0.0

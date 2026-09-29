@@ -1,0 +1,30 @@
+{
+	# Port 80 on this host belongs to another app, so no HTTP listener and no HTTP->HTTPS redirect.
+	auto_https disable_redirects
+}
+
+{$SITE_ADDRESS} {
+	tls {
+		# Validate with TLS-ALPN on 443 only; the HTTP-01 challenge would need port 80.
+		issuer acme {
+			disable_http_challenge
+		}
+	}
+
+	# Slightly above the API's own cap (2 files x 10 MB + multipart framing), which gives the precise error.
+	request_body {
+		max_size 25MB
+	}
+
+	reverse_proxy api:8000
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}
