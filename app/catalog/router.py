@@ -96,6 +96,16 @@ UPLOAD_OPENAPI = {
 }
 
 
+def _provided(value):
+    """None for a form field the user left empty. Browsers and Swagger UI send an untouched file input as an
+    empty string or as a part with no filename, rather than omitting it."""
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return None
+    if isinstance(value, UploadFile) and not value.filename:
+        return None
+    return value
+
+
 def _extension(upload: UploadFile) -> str:
     ext = Path(upload.filename or "").suffix.lower()
     if ext == ".xls":
@@ -172,7 +182,7 @@ async def create_job(request: Request, response: Response, principal: CurrentPri
     meta, job_path = None, None
     try:
         async with request.form(max_files=2, max_fields=2) as form:
-            file, master = form.get("file"), form.get("master_data")
+            file, master = _provided(form.get("file")), _provided(form.get("master_data"))
             if not isinstance(file, UploadFile):
                 raise ApiError(422, "missing_file", "Multipart field 'file' (an .xlsx or .csv) is required")
             if master is not None and not isinstance(master, UploadFile):

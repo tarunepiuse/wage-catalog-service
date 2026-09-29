@@ -303,3 +303,28 @@ def test_released_claim_can_be_downloaded_again(client):
     assert _download(client, h, job).status_code == 404  # claimed: a concurrent second download loses
     assert store.release(meta, claimed)
     assert _download(client, h, job).status_code == 200
+
+
+# ---------- what browsers / Swagger UI actually send ----------
+
+def test_empty_optional_master_data_text_field_is_ignored(client):
+    h = login(client)
+    with open(INPUT, "rb") as f:
+        r = client.post("/v1/catalog/jobs", headers=h, files={"file": (INPUT.name, f, XLSX_MIME)},
+                        data={"master_data": ""})
+    assert r.status_code == 201, r.text
+    assert rows_of(_download(client, h, r.json()).content) == expected_rows()
+
+
+def test_empty_optional_master_data_file_part_is_ignored(client):
+    # An untouched <input type="file"> is sent as a part with filename="" and no content.
+    h = login(client)
+    with open(INPUT, "rb") as f:
+        r = client.post("/v1/catalog/jobs", headers=h, files={
+            "file": (INPUT.name, f, XLSX_MIME), "master_data": ("", b"", "application/octet-stream")})
+    assert r.status_code == 201, r.text
+
+
+def test_empty_file_part_for_the_main_file_is_reported_as_missing(client):
+    r = client.post("/v1/catalog/jobs", headers=login(client), files={"file": ("", b"", "application/octet-stream")})
+    assert r.status_code == 422 and r.json()["code"] == "missing_file"
