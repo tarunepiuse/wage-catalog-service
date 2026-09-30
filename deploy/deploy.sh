@@ -32,6 +32,10 @@ docker compose build api
 echo "==> Starting containers"
 docker compose up -d --remove-orphans
 
+# Compose can't see edits inside the mounted Caddyfile; reload so config changes always take effect.
+echo "==> Reloading Caddy configuration"
+docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile </dev/null
+
 echo "==> Waiting for the API to become healthy"
 for _ in $(seq 1 30); do
   status=$(docker inspect -f '{{.State.Health.Status}}' "$(docker compose ps -q api)" 2>/dev/null || echo starting)

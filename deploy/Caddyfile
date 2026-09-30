@@ -5,6 +5,10 @@
 
 {$SITE_ADDRESS} {
 	tls {
+		# RSA, not Caddy's default ECDSA: SAP clients (CommonCryptoLib, e.g. "PFS:HIGH:!aECDSA" with TLS <= 1.2)
+		# refuse ECDSA-authenticated ciphers and fail with handshake_failure. RSA works for browsers too.
+		key_type rsa2048
+
 		# Validate with TLS-ALPN on 443 only; the HTTP-01 challenge would need port 80.
 		issuer acme {
 			disable_http_challenge
