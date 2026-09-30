@@ -32,7 +32,7 @@ docker compose build api
 echo "==> Starting containers"
 docker compose up -d --remove-orphans
 
-# Compose can't see edits inside the mounted Caddyfile; reload so config changes always take effect.
+# Compose doesn't restart Caddy for config-only changes; reload applies them with no downtime.
 echo "==> Reloading Caddy configuration"
 docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile </dev/null
 

@@ -4,7 +4,7 @@
 #   caddy  HTTPS on 443 with an automatic Let's Encrypt certificate
 #
 # Port 80 is deliberately not used: on manon-prod it belongs to manon's nginx. Caddy obtains its
-# certificate with the TLS-ALPN challenge on 443 instead (see Caddyfile).
+# certificate with the TLS-ALPN challenge on 443 instead (see caddy/Caddyfile).
 #
 # Configuration comes from deploy/.env (created by deploy.sh, never committed).
 
@@ -43,7 +43,9 @@ services:
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS in deploy/.env}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Mount the folder, not the file: git replaces files on pull, and a single-file bind mount keeps
+      # pointing at the old copy, so a reload would silently use stale config.
+      - ./caddy:/etc/caddy:ro
       - caddy_data:/data      # certificates — keep, or Let's Encrypt rate limits bite on redeploys
       - caddy_config:/config
     mem_limit: 128m
